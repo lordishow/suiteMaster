@@ -13,6 +13,14 @@ getgenv().UEMS_LOADSTRINGS = {
 	["Bypasses"] = "",
 }
 
+local StarterGui = game:GetService("StarterGui")
+
+StarterGui:SetCore("SendNotification", {
+    Title = "Suite",
+    Text = "Loading User Interface",
+    Duration = 5
+})
+
 local asset = game:GetObjects("rbxassetid://100247930854587")[1]
 local datamodel,GUI = pcall(function() 
     return asset:IsA("ScreenGui") and asset

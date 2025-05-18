@@ -1,5 +1,3 @@
-
-
 local asset = game:GetObjects("rbxassetid://111559241175778")[1]
 local datamodel,GUI = pcall(function() 
     return asset:IsA("ScreenGui") and asset
@@ -22,7 +20,7 @@ local SERVICES = {
 }
 
 local LocalPlayer = SERVICES.PLAYERS.LocalPlayer
-local Character = LocalPlayer.Character
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
 local Humanoid = Character:WaitForChild("Humanoid")
 
@@ -401,8 +399,13 @@ function main()
 	core.main_connections.clear = core.main.clear.MouseButton1Click:Connect(function()
 		clear()
 	end)
-	
+	SERVICES.STARTERGUI:SetCore("SendNotification", {
+			Title = "Debugger",
+			Text = "Loaded Succesfully!",
+			Duration = 1.5
+		})
 	setup_remote_hooks()
+    	
 end
 
 main()

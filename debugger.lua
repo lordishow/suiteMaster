@@ -1,4 +1,4 @@
-local asset = game:GetObjects("rbxassetid://96587691609955")[1]
+local asset = game:GetObjects("rbxassetid://135407965062465")[1]
 local datamodel,GUI = pcall(function() 
     return asset:IsA("ScreenGui") and asset
 end)

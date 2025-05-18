@@ -1,0 +1,415 @@
+local asset = game:GetObjects("rbxassetid://111559241175778")[1]
+local datamodel,GUI = pcall(function() 
+    return asset:IsA("ScreenGui") and asset
+end)
+
+if not GUI then return end
+
+if getgenv().UEMS_DEBUGGER_UI then 
+    getgenv().UEMS_DEBUGGER_UI:Destroy()
+    getgenv().UEMS_DEBUGGER_UI = nil
+    getgenv().UEMS_DEBUGGER_CLEANUP()
+end
+
+getgenv().UEMS_DEBUGGER_UI = GUI
+GUI.Parent = gethui()
+GUI.Name = crypt.generatekey(8, 12)
+
+type remote_type = "RemoteEvent" | "RemoteFunction" | "Kick"
+
+local SERVICES = {
+	PLAYERS = game:GetService("Players"),
+	STARTERGUI = game:GetService("StarterGui"),
+}
+
+local LocalPlayer = SERVICES.PLAYERS.LocalPlayer
+local Character = LocalPlayer.Character
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+local Humanoid = Character:WaitForChild("Humanoid")
+
+LocalPlayer.CharacterAdded:Connect(function(c)
+	Character = c
+	HumanoidRootPart = c:WaitForChild("HumanoidRootPart")
+	Humanoid = c:WaitForChild("Humanoid")
+end)
+
+local __main = GUI:WaitForChild("MAIN")
+local __info = GUI:WaitForChild("INFO")
+local __output = GUI:WaitForChild("OUTPUT")
+
+local __anticheattriggercontainer = __main:WaitForChild("AnticheatTriggerContainer"):WaitForChild("Container")
+
+local core = {
+	available_index = 0;
+	close = __main:WaitForChild("Close"),
+    _running_ = true,
+	main = {
+		block_kick = {
+			button = __main:WaitForChild("BlockKick"),
+			state = false,
+		},
+		block_remotes = {
+			button = __main:WaitForChild("BlockRemotes"),
+			state = false,
+		},
+		pause_resume = {
+			button = __main:WaitForChild("PauseResume"),
+			state = false,
+		},
+		
+		triggers = {
+			teleport = __anticheattriggercontainer:WaitForChild("TeleportTrigger"),
+			velocity = __anticheattriggercontainer:WaitForChild("VelocityTrigger"),
+			walkspeed = __anticheattriggercontainer:WaitForChild("WalkSpeedTrigger"),
+		},
+		clear = __main:WaitForChild("Clear"),
+	},
+	templates = {
+		FUNCTION = __output:WaitForChild("ScrollingFrame"):WaitForChild("FunctionTemplate"),
+		REMOTE = __output:WaitForChild("ScrollingFrame"):WaitForChild("RemoteTemplate"),
+		KICK = __output:WaitForChild("ScrollingFrame"):WaitForChild("KickTemplate"),
+	},
+    all_remote_meta = {},
+	main_connections = {},
+	event_hooks = {},
+	function_hooks = {},
+}
+
+local state_parser = {
+	[true] = "On",
+	[false] = "Off",
+}
+
+function stringifyTable(tbl, indent)
+	indent = indent or 0
+	local formatting = string.rep("  ", indent)
+	local result = "{\n"
+	local keys = {}
+
+	for k in pairs(tbl) do
+		table.insert(keys, k)
+	end
+
+	table.sort(keys, function(a, b)
+		if type(a) == "number" and type(b) == "number" then
+			return a < b
+		else
+			return tostring(a) < tostring(b)
+		end
+	end)
+
+	for i, k in ipairs(keys) do
+		local v = tbl[k]
+		local isArray = k == i
+		local keyStr = (isArray and "") or ((type(k) == "string") and `["{k}"] = ` or `[${tostring(k)}] = `)
+		local valueStr
+
+		if type(v) == "table" then
+			valueStr = stringifyTable(v, indent + 1)
+		elseif type(v) == "string" then
+			valueStr = `"{v}"`
+		else
+			valueStr = tostring(v)
+		end
+
+		local line = formatting .. "  " .. keyStr .. valueStr
+		if i < #keys then
+			line = line .. ","
+		end
+		result = result .. line .. "\n"
+	end
+
+	result = result .. formatting .. "}"
+	return result
+end
+
+function core.set_info(FullName : string, Arguments : string)
+	__info:WaitForChild("InfoContainer"):WaitForChild("ScrollingFrame"):WaitForChild("Args").Text = Arguments
+	__info:WaitForChild("InfoContainer"):WaitForChild("FullName").Text = FullName
+end
+
+function core.add_hook(remote : RemoteEvent? | RemoteFunction?, remote_type : remote_type, ...)
+	if remote_type == "RemoteEvent" then
+		core.event_hooks[remote] = {
+			CALLS = {
+			}
+		}	
+		core.event_hooks[remote].add = function(...)
+			core.available_index += 1
+			local Arguments = {...}
+			local ReadableArgs = stringifyTable(Arguments)
+			core.event_hooks[remote].CALLS[core.available_index] = {
+				ReadableArgs = ReadableArgs,
+				conn = nil,
+			}
+			local new_event_template = core.templates.REMOTE:Clone()
+			new_event_template:RemoveTag("template")
+			local success, fullName = pcall(function()
+	            return remote:GetFullName()
+            end)
+            new_event_template.FullName.Text = success and fullName or "[Destroyed Remote]"
+
+			core.event_hooks[remote].CALLS[core.available_index].conn = new_event_template.Info.MouseButton1Click:Connect(function()
+				core.set_info(new_event_template.FullName.Text, ReadableArgs)
+			end)
+			new_event_template.Parent = __output:WaitForChild("ScrollingFrame")
+			new_event_template.Visible = true
+		end
+		return core.event_hooks[remote]
+	elseif remote_type == "RemoteFunction" then
+		core.function_hooks[remote] = {
+			CALLS = {
+			}
+		}	
+		core.function_hooks[remote].add = function(...)
+			core.available_index += 1
+			local Arguments = {...}
+			local ReadableArgs = stringifyTable(Arguments)
+			core.function_hooks[remote].CALLS[core.available_index] = {
+				ReadableArgs = ReadableArgs,
+			}
+			
+			local new_event_template = core.templates.FUNCTION:Clone()
+			new_event_template:RemoveTag("template")
+			local success, fullName = pcall(function()
+	            return remote:GetFullName()
+            end)
+            new_event_template.FullName.Text = success and fullName or "[Destroyed Remote]"
+			core.function_hooks[remote].CALLS[core.available_index].conn = new_event_template.Info.MouseButton1Click:Connect(function()
+				core.set_info(new_event_template.FullName.Text, ReadableArgs)
+			end)
+			new_event_template.Parent = __output:WaitForChild("ScrollingFrame")
+			new_event_template.Visible = true
+		end
+		return core.function_hooks[remote]
+	else
+		local new_event_template = core.templates.KICK:Clone()
+		new_event_template:RemoveTag("template")
+		new_event_template.FullName.Text = string.format(":Kick('%s')", unpack({...}))
+		new_event_template.Parent = __output:WaitForChild("ScrollingFrame")
+		new_event_template.Visible = true
+		return
+	end
+end
+
+function clear()
+	for _, remote_table in core.event_hooks do
+		for _, call in remote_table.CALLS do
+			call.conn:Disconnect()
+			call = nil
+		end
+	end
+	for _, kid in __output:WaitForChild("ScrollingFrame"):GetChildren() do
+		if not kid:IsA("UIGridLayout") and not kid:HasTag("template") then
+			kid:Destroy()
+		end
+	end
+end
+
+getgenv().UEMS_DEBUGGER_CLEANUP = function()
+	core._running_ = false
+	for _,conn in core.main_connections do 
+		conn:Disconnect()
+	end
+	clear()
+	GUI:Destroy()
+end
+
+function setup_remote_hooks()
+	--[[ do in executor ]]
+    local old;
+    old = hookmetamethod(game, "__namecall", newcclosure(function(self, ...) 
+        if checkcaller() then return old(self, ...) end
+        if not core._running_ or core.main.pause_resume.state == true then 
+            return old(self, ...)
+        end
+        
+        local method = getnamecallmethod()
+        
+        local self_type = method and (method == "FireServer" and "RemoteEvent" or method == "InvokeServer" and "RemoteFunction" or method == "Kick" and "Kick") or nil       
+ 
+        if self_type ~= "Kick" and self_type ~= nil then 
+            if core.main.block_remotes.state then 
+                local RemoteMeta = core.all_remote_meta[self]
+                if not RemoteMeta then
+                    if self_type == "RemoteEvent" then 
+                        core.all_remote_meta[self] = core.add_hook(self, "RemoteEvent")
+                    elseif self_type == "RemoteFunction" then 
+                        core.all_remote_meta[self] = core.add_hook(self, "RemoteFunction")
+                    end 
+                end
+                RemoteMeta.add({...})
+                return
+            end
+        elseif self_type == "Kick" and self_type ~= nil then
+            if core.main.block_kick.state then
+                core.add_hook(nil,"Kick", unpack(...))
+                return
+            end
+        end
+        
+        return old(self, ...)
+    end))
+
+	-- testing
+	local a = Instance.new("RemoteEvent")
+	local b = Instance.new("RemoteFunction")
+	
+	local for_tgis = core.add_hook(a, "RemoteEvent")
+	local for_tgis_f = core.add_hook(b, "RemoteFunction")
+	
+	for i = 1,100 do 
+		for_tgis.add({
+			["Kick"] = true,
+			["Exploit"] = true,
+			["Offenses"] = {
+				"fly",
+				"noclip",
+				"aimbot"
+			}
+		})
+		task.wait(math.random(1,3))
+		for_tgis_f.add({"bad", {guy = true}})
+		
+		task.wait(1)
+		core.add_hook(nil,"Kick", "Exploit Detected!!!!!!")
+	end
+end
+
+function main()
+	core.main_connections.bkick = core.main.block_kick.button.MouseButton1Click:Connect(function()
+		core.main.block_kick.state = not core.main.block_kick.state
+		core.main.block_kick.button.BackgroundColor3 = core.main.block_kick.button[state_parser[core.main.block_kick.state]].Value
+		core.main.block_kick.button.Outline.BackgroundColor3 = core.main.block_kick.button.Outline[state_parser[core.main.block_kick.state]].Value	
+	end)
+	
+	core.main_connections.bremotes = core.main.block_remotes.button.MouseButton1Click:Connect(function()
+		core.main.block_remotes.state = not core.main.block_remotes.state
+		
+		core.main.block_remotes.button.BackgroundColor3 = core.main.block_remotes.button[state_parser[core.main.block_remotes.state]].Value
+		core.main.block_remotes.button.Outline.BackgroundColor3 = core.main.block_remotes.button.Outline[state_parser[core.main.block_remotes.state]].Value
+	end)
+	
+	core.main_connections.presume = core.main.pause_resume.button.MouseButton1Click:Connect(function()
+		core.main.pause_resume.state = not core.main.pause_resume.state
+
+		core.main.pause_resume.button.BackgroundColor3 = core.main.pause_resume.button[state_parser[core.main.pause_resume.state]].Value
+		core.main.pause_resume.button.Outline.BackgroundColor3 = core.main.pause_resume.button.Outline[state_parser[core.main.pause_resume.state]].Value
+		if core.main.pause_resume.state == true then 
+			core.main.pause_resume.button.Text = "Running"
+		else
+			core.main.pause_resume.button.Text = "Paused"
+		end
+	end)
+	
+	core.main_connections.cremote = core.close.MouseButton1Click:Connect(function()
+        if getgenv().UEMS_DEBUGGER_CLEANUP then 
+            getgenv().UEMS_DEBUGGER_CLEANUP()
+        end
+	end)
+	
+	-- -- --
+	
+	core.main_connections.teleportt = core.main.triggers.teleport.MouseButton1Click:Connect(function()
+		local test_ongoing = true
+		local last_position = HumanoidRootPart.CFrame
+
+		task.delay(4, function() 
+			test_ongoing = false
+		end)
+
+		local safe_position = CFrame.new(0, 100, 0)
+		local tik = os.clock()
+		while test_ongoing do
+			HumanoidRootPart.CFrame = safe_position
+			safe_position *= CFrame.new(
+				math.random(-1000, 1000),
+				math.random(50, 500),
+				math.random(-1000, 1000)
+			)
+			task.wait(0.05)
+		end
+		HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+		HumanoidRootPart.CFrame = last_position
+	end)
+
+	core.main_connections.velocityt = core.main.triggers.velocity.MouseButton1Click:Connect(function()
+		local test_ongoing = true
+		local last_position = HumanoidRootPart.CFrame
+
+		task.delay(4, function()
+			test_ongoing = false
+		end)
+
+		local bodyVelocity = Instance.new("BodyVelocity")
+		bodyVelocity.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+		bodyVelocity.Velocity = Vector3.new(0, 1000, 0)
+		bodyVelocity.P = 100000
+		bodyVelocity.Parent = HumanoidRootPart
+		
+		local ind = 1
+		while test_ongoing do
+			ind += 50
+			bodyVelocity.Velocity = Vector3.new(
+				math.random(-300 - ind, 300 + ind),
+				math.random(300, 600 + ind),
+				math.random(-300 - ind, 300 + ind)
+			)
+			task.wait(0.1)
+		end
+
+		bodyVelocity:Destroy()
+		HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+		HumanoidRootPart.CFrame = last_position
+	end)
+
+	core.main_connections.walkst = core.main.triggers.walkspeed.MouseButton1Click:Connect(function()
+		local test_ongoing = true
+		local last_position = HumanoidRootPart.CFrame
+		local last_speed = Humanoid.WalkSpeed
+
+		task.delay(4, function() 
+			test_ongoing = false
+		end)
+
+		local index = 1
+		while test_ongoing do
+			index += 1
+			local new_speed = math.random(100, 300) + (index * 5)
+			Humanoid.WalkSpeed = new_speed
+			task.wait(0.1)
+		end
+
+		Humanoid.WalkSpeed = last_speed
+		HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+		HumanoidRootPart.CFrame = last_position
+	end)
+
+	-- -- --
+	
+	core.main_connections.cargs = __info:WaitForChild("CopyArgs").MouseButton1Click:Connect(function()
+		setclipboard(__info:WaitForChild("InfoContainer"):WaitForChild("Args").Text)
+		SERVICES.STARTERGUI:SetCore("SendNotification", {
+			Title = "Exploit Creation Suite",
+			Text = "Copied Arguments to Clipboard",
+			Duration = 1.5
+		})
+	end)
+	
+	core.main_connections.cfullname = __info:WaitForChild("CopyPath").MouseButton1Click:Connect(function()
+	    setclipboard(__info:WaitForChild("InfoContainer"):WaitForChild("FullName").Text)
+		SERVICES.STARTERGUI:SetCore("SendNotification", {
+			Title = "Exploit Creation Suite",
+			Text = "Copied Path to Clipboard",
+			Duration = 1.5
+		})	
+	end)
+	
+	core.main_connections.clear = core.main.clear.MouseButton1Click:Connect(function()
+		clear()
+	end)
+	
+	setup_remote_hooks()
+end
+
+main()

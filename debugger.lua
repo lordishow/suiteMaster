@@ -128,6 +128,7 @@ end
 function core.add_hook(remote : RemoteEvent? | RemoteFunction?, remote_type : remote_type, ...)
 	if remote_type == "RemoteEvent" then
 		core.event_hooks[remote] = {
+            exclude = false,
 			CALLS = {
 			}
 		}	
@@ -139,7 +140,7 @@ function core.add_hook(remote : RemoteEvent? | RemoteFunction?, remote_type : re
 				ReadableArgs = ReadableArgs,
 				conn = nil,
 			}
-            print(ReadableArgs)
+
 			local new_event_template = core.templates.REMOTE:Clone()
 			new_event_template:RemoveTag("template")
             
@@ -152,12 +153,17 @@ function core.add_hook(remote : RemoteEvent? | RemoteFunction?, remote_type : re
 			core.event_hooks[remote].CALLS[core.available_index].conn = new_event_template.Info.MouseButton1Click:Connect(function()
 				core.set_info(fullName, ReadableArgs)
 			end)
+
+            core.event_hooks[remote].exclude_conn = new_event_template.Exclude.MouseButton1Click:Connect(function() 
+                core.event_hooks[remote].exclude = true
+            end)
 			new_event_template.Parent = __output:WaitForChild("ScrollingFrame")
 			new_event_template.Visible = true
 		end
 		return core.event_hooks[remote]
 	elseif remote_type == "RemoteFunction" then
 		core.function_hooks[remote] = {
+            exclude = false,
 			CALLS = {
 			}
 		}	
@@ -176,10 +182,14 @@ function core.add_hook(remote : RemoteEvent? | RemoteFunction?, remote_type : re
             end)
             fullName = success and fullName or "[Destroyed Remote]"
             new_event_template.FullName.Text = fullName
-            print(new_event_template.FullName)
+
 			core.function_hooks[remote].CALLS[core.available_index].conn = new_event_template.Info.MouseButton1Click:Connect(function()
                 core.set_info(fullName, ReadableArgs)
 			end)
+            core.function_hooks[remote].exclude_conn = new_event_template.Exclude.MouseButton1Click:Connect(function() 
+                core.function_hooks[remote].exclude = true
+            end)
+
 			new_event_template.Parent = __output:WaitForChild("ScrollingFrame")
 			new_event_template.Visible = true
 		end
@@ -196,6 +206,9 @@ end
 
 function clear()
 	for _, remote_table in core.event_hooks do
+        if remote_table.exclude_conn then
+            remote_table.exclude_conn:Disconnect()
+        end
 		for _, call in remote_table.CALLS do
             if call and call.conn == nil then continue end
 			call.conn:Disconnect()
@@ -203,6 +216,9 @@ function clear()
 		end
 	end
     for _, remote_table in core.function_hooks do
+        if remote_table.exclude_conn then
+            remote_table.exclude_conn:Disconnect()
+        end
 		for _, call in remote_table.CALLS do
             if call and call.conn == nil then continue end
 			call.conn:Disconnect()
@@ -247,7 +263,9 @@ function setup_remote_hooks()
                     core.all_remote_meta[self] = core.add_hook(self, "RemoteEvent")
                 elseif self_type == "RemoteFunction" then 
                     core.all_remote_meta[self] = core.add_hook(self, "RemoteFunction")
-                end 
+                end
+            elseif RemoteMeta.exclude then
+                return old(self, ...)  
             end
             RemoteMeta = core.all_remote_meta[self]
             if core.main.block_remotes.state == true then

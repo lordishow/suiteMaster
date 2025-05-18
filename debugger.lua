@@ -141,7 +141,7 @@ function core.add_hook(remote : RemoteEvent? | RemoteFunction?, remote_type : re
 				ReadableArgs = ReadableArgs,
 				conn = nil,
 			}
-
+            print(ReadableArgs)
 			local new_event_template = core.templates.REMOTE:Clone()
 			new_event_template:RemoveTag("template")
             
@@ -152,7 +152,7 @@ function core.add_hook(remote : RemoteEvent? | RemoteFunction?, remote_type : re
             new_event_template.FullName.Text = fullName
             
 			core.event_hooks[remote].CALLS[core.available_index].conn = new_event_template.Info.MouseButton1Click:Connect(function()
-				core.set_info(new_event_template.FullName.Text, ReadableArgs)
+				core.set_info(fullName, ReadableArgs)
 			end)
 			new_event_template.Parent = __output:WaitForChild("ScrollingFrame")
 			new_event_template.Visible = true
@@ -223,6 +223,7 @@ getgenv().UEMS_DEBUGGER_CLEANUP = function()
 	for _,conn in core.main_connections do 
 		conn:Disconnect()
 	end
+    
 	clear()
 	if getgenv().UEMS_DEBUGGER_UI then 
         getgenv().UEMS_DEBUGGER_UI:Destroy()

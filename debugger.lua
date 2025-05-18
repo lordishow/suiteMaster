@@ -1,3 +1,5 @@
+
+
 local asset = game:GetObjects("rbxassetid://111559241175778")[1]
 local datamodel,GUI = pcall(function() 
     return asset:IsA("ScreenGui") and asset
@@ -5,9 +7,7 @@ end)
 
 if not GUI then return end
 
-if getgenv().UEMS_DEBUGGER_UI then 
-    getgenv().UEMS_DEBUGGER_UI:Destroy()
-    getgenv().UEMS_DEBUGGER_UI = nil
+if getgenv().UEMS_DEBUGGER_CLEANUP then 
     getgenv().UEMS_DEBUGGER_CLEANUP()
 end
 
@@ -212,7 +212,9 @@ getgenv().UEMS_DEBUGGER_CLEANUP = function()
 		conn:Disconnect()
 	end
 	clear()
-	GUI:Destroy()
+	if getgenv().UEMS_DEBUGGER_UI then 
+        getgenv().UEMS_DEBUGGER_UI:Destroy()
+    end
 end
 
 function setup_remote_hooks()
@@ -220,7 +222,7 @@ function setup_remote_hooks()
     local old;
     old = hookmetamethod(game, "__namecall", newcclosure(function(self, ...) 
         if checkcaller() then return old(self, ...) end
-        if not core._running_ or core.main.pause_resume.state == true then 
+        if not core._running_ or core.main.pause_resume.state == false then 
             return old(self, ...)
         end
         
@@ -229,7 +231,7 @@ function setup_remote_hooks()
         local self_type = method and (method == "FireServer" and "RemoteEvent" or method == "InvokeServer" and "RemoteFunction" or method == "Kick" and "Kick") or nil       
  
         if self_type ~= "Kick" and self_type ~= nil then 
-            if core.main.block_remotes.state then 
+            if core.main.block_remotes.state == false then 
                 local RemoteMeta = core.all_remote_meta[self]
                 if not RemoteMeta then
                     if self_type == "RemoteEvent" then 
@@ -242,7 +244,7 @@ function setup_remote_hooks()
                 return
             end
         elseif self_type == "Kick" and self_type ~= nil then
-            if core.main.block_kick.state then
+            if core.main.block_kick.state == false then
                 core.add_hook(nil,"Kick", unpack(...))
                 return
             end
@@ -250,30 +252,6 @@ function setup_remote_hooks()
         
         return old(self, ...)
     end))
-
-	-- testing
-	local a = Instance.new("RemoteEvent")
-	local b = Instance.new("RemoteFunction")
-	
-	local for_tgis = core.add_hook(a, "RemoteEvent")
-	local for_tgis_f = core.add_hook(b, "RemoteFunction")
-	
-	for i = 1,100 do 
-		for_tgis.add({
-			["Kick"] = true,
-			["Exploit"] = true,
-			["Offenses"] = {
-				"fly",
-				"noclip",
-				"aimbot"
-			}
-		})
-		task.wait(math.random(1,3))
-		for_tgis_f.add({"bad", {guy = true}})
-		
-		task.wait(1)
-		core.add_hook(nil,"Kick", "Exploit Detected!!!!!!")
-	end
 end
 
 function main()

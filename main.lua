@@ -9,7 +9,7 @@ getgenv().UEMS_LOADSTRINGS = {
 	["InfiniteYield"] = "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source",
 	["SimpleSpy"] = "https://raw.githubusercontent.com/78n/SimpleSpy/main/SimpleSpyBeta.lua",
 	["Hydroxide"] = "_hydroxide_custom_",
-	["AnticheatDebugger"] = "",
+	["AnticheatDebugger"] = "https://raw.githubusercontent.com/lordishow/suiteMaster/refs/heads/main/debugger.lua",
 	["Bypasses"] = "",
 }
 

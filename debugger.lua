@@ -4,7 +4,6 @@ local asset = game:GetObjects("rbxassetid://111559241175778")[1]
 local datamodel,GUI = pcall(function() 
     return asset:IsA("ScreenGui") and asset
 end)
-
 if not GUI then return end
 
 if getgenv().UEMS_DEBUGGER_CLEANUP then 
@@ -83,7 +82,7 @@ local state_parser = {
 function stringifyTable(tbl, indent)
 	indent = indent or 0
 	local formatting = string.rep("  ", indent)
-	local result = "{\n"
+	local result = "unpack({\n"
 	local keys = {}
 
 	for k in pairs(tbl) do
@@ -119,7 +118,7 @@ function stringifyTable(tbl, indent)
 		result = result .. line .. "\n"
 	end
 
-	result = result .. formatting .. "}"
+	result = result .. formatting .. "})"
 	return result
 end
 
@@ -142,13 +141,16 @@ function core.add_hook(remote : RemoteEvent? | RemoteFunction?, remote_type : re
 				ReadableArgs = ReadableArgs,
 				conn = nil,
 			}
+
 			local new_event_template = core.templates.REMOTE:Clone()
 			new_event_template:RemoveTag("template")
+            
 			local success, fullName = pcall(function()
 	            return remote:GetFullName()
             end)
-            new_event_template.FullName.Text = success and fullName or "[Destroyed Remote]"
-
+            fullName = success and fullName or "[Destroyed Remote]"
+            new_event_template.FullName.Text = fullName
+            
 			core.event_hooks[remote].CALLS[core.available_index].conn = new_event_template.Info.MouseButton1Click:Connect(function()
 				core.set_info(new_event_template.FullName.Text, ReadableArgs)
 			end)
@@ -174,9 +176,11 @@ function core.add_hook(remote : RemoteEvent? | RemoteFunction?, remote_type : re
 			local success, fullName = pcall(function()
 	            return remote:GetFullName()
             end)
-            new_event_template.FullName.Text = success and fullName or "[Destroyed Remote]"
+            fullName = success and fullName or "[Destroyed Remote]"
+            new_event_template.FullName.Text = fullName
+            print(new_event_template.FullName)
 			core.function_hooks[remote].CALLS[core.available_index].conn = new_event_template.Info.MouseButton1Click:Connect(function()
-				core.set_info(new_event_template.FullName.Text, ReadableArgs)
+                core.set_info(fullName, ReadableArgs)
 			end)
 			new_event_template.Parent = __output:WaitForChild("ScrollingFrame")
 			new_event_template.Visible = true
@@ -195,6 +199,14 @@ end
 function clear()
 	for _, remote_table in core.event_hooks do
 		for _, call in remote_table.CALLS do
+            if call and call.conn == nil then continue end
+			call.conn:Disconnect()
+			call = nil
+		end
+	end
+    for _, remote_table in core.function_hooks do
+		for _, call in remote_table.CALLS do
+            if call and call.conn == nil then continue end
 			call.conn:Disconnect()
 			call = nil
 		end
@@ -225,27 +237,29 @@ function setup_remote_hooks()
         if not core._running_ or core.main.pause_resume.state == false then 
             return old(self, ...)
         end
-        
+        setthreadidentity(8)
         local method = getnamecallmethod()
-        
         local self_type = method and (method == "FireServer" and "RemoteEvent" or method == "InvokeServer" and "RemoteFunction" or method == "Kick" and "Kick") or nil       
  
         if self_type ~= "Kick" and self_type ~= nil then 
-            if core.main.block_remotes.state == false then 
-                local RemoteMeta = core.all_remote_meta[self]
-                if not RemoteMeta then
-                    if self_type == "RemoteEvent" then 
-                        core.all_remote_meta[self] = core.add_hook(self, "RemoteEvent")
-                    elseif self_type == "RemoteFunction" then 
-                        core.all_remote_meta[self] = core.add_hook(self, "RemoteFunction")
-                    end 
+            local RemoteMeta = core.all_remote_meta[self]
+            if not RemoteMeta then
+                if self_type == "RemoteEvent" then 
+                    core.all_remote_meta[self] = core.add_hook(self, "RemoteEvent")
+                elseif self_type == "RemoteFunction" then 
+                    core.all_remote_meta[self] = core.add_hook(self, "RemoteFunction")
+                end 
+            end
+            RemoteMeta = core.all_remote_meta[self]
+            if core.main.block_remotes.state == true then
+                if core.all_remote_meta[self] then 
+                    RemoteMeta.add(...) 
                 end
-                RemoteMeta.add({...})
                 return
             end
         elseif self_type == "Kick" and self_type ~= nil then
-            if core.main.block_kick.state == false then
-                core.add_hook(nil,"Kick", unpack(...))
+            if core.main.block_kick.state == true then
+                core.add_hook(nil,"Kick", ...)
                 return
             end
         end
@@ -366,7 +380,7 @@ function main()
 	-- -- --
 	
 	core.main_connections.cargs = __info:WaitForChild("CopyArgs").MouseButton1Click:Connect(function()
-		setclipboard(__info:WaitForChild("InfoContainer"):WaitForChild("Args").Text)
+		setclipboard(__info:WaitForChild("InfoContainer"):WaitForChild("ScrollingFrame"):WaitForChild("Args").Text)
 		SERVICES.STARTERGUI:SetCore("SendNotification", {
 			Title = "Exploit Creation Suite",
 			Text = "Copied Arguments to Clipboard",

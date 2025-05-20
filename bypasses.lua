@@ -30,6 +30,9 @@ local function main()
 	for _, bypass in _BYPASSES_ do
 		core:CreateTemplate(_, bypass)
 	end
+	core.CLOSE.MouseButton1Click:Connect(function() 
+		GUI:Destroy()
+	end)
 end
 
 main()

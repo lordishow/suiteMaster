@@ -3,7 +3,7 @@ local datamodel,GUI = pcall(function()
     return asset:IsA("ScreenGui") and asset
 end)
 if not GUI then return end
-
+ 
 GUI.Parent = gethui()
 GUI.Name = crypt.generatekey(8, 12)
 

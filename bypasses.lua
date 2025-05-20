@@ -3,7 +3,11 @@ local datamodel,GUI = pcall(function()
     return asset:IsA("ScreenGui") and asset
 end)
 if not GUI then return end
- 
+
+if getgenv().UEMS_BYPASSES_CLEANUP then 
+    getgenv().UEMS_BYPASSES_CLEANUP()
+end
+
 GUI.Parent = gethui()
 GUI.Name = crypt.generatekey(8, 12)
 
@@ -17,6 +21,11 @@ local core = {
 	CLOSE = GUI:WaitForChild("MAIN"):WaitForChild("Close"),
 	TEMPLATE = GUI:WaitForChild("MAIN"):WaitForChild("Container"):WaitForChild("Template")
 }
+
+getgenv().UEMS_BYPASSES_CLEANUP = function() 
+	GUI:Destroy()
+	getgenv().UEMS_BYPASSES_CLEANUP = nil
+end
 
 function core:CreateTemplate(bypass_name, bypass_function)
 	local new_temp = core.TEMPLATE:Clone()

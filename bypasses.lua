@@ -4,7 +4,6 @@ local datamodel,GUI = pcall(function()
 end)
 if not GUI then return end
 
-local GUI = script.bypasses
 GUI.Parent = gethui()
 GUI.Name = crypt.generatekey(8, 12)
 

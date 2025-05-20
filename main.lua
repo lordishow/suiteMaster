@@ -10,7 +10,7 @@ getgenv().UEMS_LOADSTRINGS = {
 	["SimpleSpy"] = "https://raw.githubusercontent.com/78n/SimpleSpy/main/SimpleSpyBeta.lua",
 	["Hydroxide"] = "_hydroxide_custom_",
 	["AnticheatDebugger"] = "https://raw.githubusercontent.com/lordishow/suiteMaster/refs/heads/main/debugger.lua",
-	["Bypasses"] = "https://raw.githubusercontent.com/lordishow/suiteMaster/refs/heads/main/bypasses.lua",
+	["Bypasses"] = "https://raw.githubusercontent.com/lordishow/suiteMaster/refs/heads/main/bypasses.lua", 
 }
 
 local StarterGui = game:GetService("StarterGui")

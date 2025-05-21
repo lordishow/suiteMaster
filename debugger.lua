@@ -189,7 +189,7 @@ function core.update()
         if not test_variables.safe_teleport_position then 
             test_variables.safe_teleport_position = HumanoidRootPart.CFrame
         end
-        test_variables.teleport_index += 1
+        test_variables.teleport_index += 2
         HumanoidRootPart.CFrame *= CFrame.new(0,0,-test_variables.teleport_index)
 	else
 		if HumanoidRootPart then

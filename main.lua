@@ -18,7 +18,7 @@ local CUSTOM_CREATION = {
 	[1] = {
 		name = "Infinite Yield",
 		func = function() 
-			loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+			loadstring(game:HttpGet("https://raw.githubusercontent.com/DarkNetworks/Infinite-Yield/refs/heads/main/dex.lua"))()
 		end,
 	},
 	[2] = {

@@ -429,7 +429,9 @@ function main()
 	end)
 	
 	core.main_connections.clear = core.main.clear.MouseButton1Click:Connect(function()
-		clear()
+        if getgenv().UEMS_DEBUGGER_CLEANUP then 
+            getgenv().UEMS_DEBUGGER_CLEANUP()
+        end
 	end)
 	SERVICES.STARTERGUI:SetCore("SendNotification", {
 			Title = "Debugger",

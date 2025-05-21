@@ -13,36 +13,55 @@ if getgenv().UEMS_MAIN_CLEANUP then
     getgenv().UEMS_MAIN_CLEANUP()
 end
 
+
 local CUSTOM_CREATION = {
-	["Infinite Yield"] = function() 
-		loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
-	end,
-	["Dark Dex"] = function() 
-		loadstring(game:HttpGet("https://raw.githubusercontent.com/peyton2465/Dex/master/out.lua", true))()
-	end,
-	["Simple Spy"] = function() 
-		loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/78n/SimpleSpy/main/SimpleSpyBeta.lua"))()
-	end,
-	["Hydroxide"] = function() 
-		local owner = "Upbolt"
-		local branch = "revision"
+	[1] = {
+		name = "Infinite Yield",
+		func = function() 
+			loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+		end,
+	},
+	[2] = {
+		name = "Dark Dex",
+		func = function() 
+			loadstring(game:HttpGet("https://raw.githubusercontent.com/peyton2465/Dex/master/out.lua", true))()
+		end,
+	},
+	[3] = {
+		name = "Simple Spy",
+		func = function() 
+			loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/78n/SimpleSpy/main/SimpleSpyBeta.lua"))()
+		end,
+	},
+	[4] = {
+		name = "Hydroxide",
+		func = function() 
+			local owner = "Upbolt"
+			local branch = "revision"
 
-		local function webImport(file)
-			return loadstring(game:HttpGetAsync(("https://raw.githubusercontent.com/%s/Hydroxide/%s/%s.lua"):format(owner, branch, file)), file .. '.lua')()
-		end
+			local function webImport(file)
+				return loadstring(game:HttpGetAsync(("https://raw.githubusercontent.com/%s/Hydroxide/%s/%s.lua"):format(owner, branch, file)), file .. '.lua')()
+			end
 
-		webImport("init")
-		webImport("ui/main")
-	end,
+			webImport("init")
+			webImport("ui/main")
+		end,
+	},
 }
 
 local CUSTOM_DEBUGGING = {
-	["BYPASSES"] = function() 
-		loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/lordishow/suiteMaster/refs/heads/main/bypasses.lua"))()
-	end,
-	["Anti-Cheat Debugger"] = function() 
-		loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/lordishow/suiteMaster/refs/heads/main/debugger.lua"))()
-	end,
+	[1] = {
+		name = "Bypasses",
+		func = function() 
+			loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/lordishow/suiteMaster/refs/heads/main/bypasses.lua"))()
+		end,
+	},
+	[2] = {
+		name = "Anti-Cheat Debugger",
+		func = function() 
+			loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/lordishow/suiteMaster/refs/heads/main/debugger.lua"))()
+		end,
+	},
 }
 
 local __MAIN = GUI:WaitForChild("MAIN")
@@ -81,7 +100,7 @@ end
 
 function core.add_debugging_button(name, func)
 	local New_Template = core.debugging.TEMPLATE:Clone()
-	New_Template.Parent = __CREATION:WaitForChild("Container")
+	New_Template.Parent = __DEBUGGING:WaitForChild("Container")
 	New_Template.Name = name
 	New_Template.TextButton.Text = name
 	New_Template.Visible = true
@@ -89,12 +108,17 @@ function core.add_debugging_button(name, func)
 end
 
 local function main()
-	for name, load in CUSTOM_CREATION do 
-		core.add_creation_button(name, load)
+	for _, object in CUSTOM_CREATION do 
+		core.add_creation_button(object.name, object.func)
 	end
-	for name, load in CUSTOM_DEBUGGING do 
-		core.add_debugging_button(name, load)
+	for _, object in CUSTOM_DEBUGGING do 
+		core.add_debugging_button(object.name, object.func)
 	end
+	main_connections.close = core.CLOSE.MouseButton1Click:Connect(function() 
+		if getgenv().UEMS_MAIN_CLEANUP then 
+			getgenv().UEMS_MAIN_CLEANUP()
+		end
+	end)
 end
 
 main()

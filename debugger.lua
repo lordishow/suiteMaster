@@ -17,6 +17,7 @@ type remote_type = "RemoteEvent" | "RemoteFunction" | "Kick"
 local SERVICES = {
 	PLAYERS = game:GetService("Players"),
 	STARTERGUI = game:GetService("StarterGui"),
+    RUN = game:GetService("RunService"),
 }
 
 local LocalPlayer = SERVICES.PLAYERS.LocalPlayer
@@ -40,6 +41,11 @@ local core = {
 	available_index = 0;
 	close = __main:WaitForChild("Close"),
     _running_ = true,
+    tests = {
+        velocity = false,
+        walkspeed = false,
+        teleport = false,
+    },
 	main = {
 		block_kick = {
 			button = __main:WaitForChild("BlockKick"),
@@ -118,6 +124,68 @@ function stringifyTable(tbl, indent)
 
 	result = result .. formatting .. "})"
 	return result
+end
+
+local test_variables = {
+    old_speed = nil,
+    velocity_index = 0,
+    safe_velocity_position = nil,
+    safe_teleport_position = nil,
+    teleport_index = 0,
+}
+
+function core.update()
+    if core.tests.walkspeed then
+        if not test_variables.old_speed then
+            test_variables.old_speed = Humanoid.WalkSpeed
+        end 
+        Humanoid.WalkSpeed = test_variables.old_speed * 25
+	else
+        if test_variables.old_speed then
+            Humanoid.WalkSpeed = test_variables.old_speed
+            test_variables.old_speed = nil
+        end 
+    end
+
+    if core.tests.velocity then
+        if not test_variables.safe_velocity_position then 
+            test_variables.safe_velocity_position = HumanoidRootPart.CFrame
+        end
+        test_variables.velocity_index += 1
+        local bodyVelocity = HumanoidRootPart:FindFirstChild("_test_velocity_") or Instance.new("BodyVelocity")
+		bodyVelocity.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+		bodyVelocity.Velocity = Vector3.new(0, 1000, 0)
+		bodyVelocity.P = 100000
+        bodyVelocity.Name = "_test_velocity_"
+		bodyVelocity.Parent = HumanoidRootPart
+		
+        bodyVelocity.Velocity = Vector3.new(
+			math.random(-300 - test_variables.velocity_index, 300 + test_variables.velocity_index),
+			math.random(300 + test_variables.velocity_index, 600 + test_variables.velocity_index),
+			math.random(-300 - test_variables.velocity_index, 300 + test_variables.velocity_index)
+		)
+	else
+        local test_vel = HumanoidRootPart:FindFirstChild("_test_velocity_")
+        if test_vel then
+            test_vel:Destroy()
+            test_variables.velocity_index = 0
+            HumanoidRootPart.CFrame = test_variables.safe_velocity_position
+            test_variables.safe_velocity_position = nil
+        end 
+    end
+
+    if core.tests.teleport then
+        if not test_variables.safe_teleport_position then 
+            test_variables.safe_teleport_position = HumanoidRootPart.CFrame
+        end
+        test_variables.teleport_index += 1
+        HumanoidRootPart.CFrame *= CFrame.new(0,0,-test_variables.teleport_index)
+	else
+        if test_variables.safe_teleport_position then
+            HumanoidRootPart.CFrame = test_variables.safe_teleport_position
+            test_variables.safe_teleport_position = nil
+        end 
+    end
 end
 
 function core.set_info(FullName : string, Arguments : string)
@@ -320,78 +388,24 @@ function main()
 	-- -- --
 	
 	core.main_connections.teleportt = core.main.triggers.teleport.MouseButton1Click:Connect(function()
-		local test_ongoing = true
-		local last_position = HumanoidRootPart.CFrame
-
+        core.tests.teleport = true
 		task.delay(4, function() 
-			test_ongoing = false
+            core.tests.teleport = false
 		end)
-
-		local safe_position = CFrame.new(0, 100, 0)
-		local tik = os.clock()
-		while test_ongoing do
-			HumanoidRootPart.CFrame = safe_position
-			safe_position *= CFrame.new(
-				math.random(-1000, 1000),
-				math.random(50, 500),
-				math.random(-1000, 1000)
-			)
-			task.wait(0.05)
-		end
-		HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero
-		HumanoidRootPart.CFrame = last_position
 	end)
 
 	core.main_connections.velocityt = core.main.triggers.velocity.MouseButton1Click:Connect(function()
-		local test_ongoing = true
-		local last_position = HumanoidRootPart.CFrame
-
-		task.delay(4, function()
-			test_ongoing = false
+        core.tests.velocity = true
+		task.delay(4, function() 
+            core.tests.velocity = false
 		end)
-
-		local bodyVelocity = Instance.new("BodyVelocity")
-		bodyVelocity.MaxForce = Vector3.new(1e9, 1e9, 1e9)
-		bodyVelocity.Velocity = Vector3.new(0, 1000, 0)
-		bodyVelocity.P = 100000
-		bodyVelocity.Parent = HumanoidRootPart
-		
-		local ind = 1
-		while test_ongoing do
-			ind += 50
-			bodyVelocity.Velocity = Vector3.new(
-				math.random(-300 - ind, 300 + ind),
-				math.random(300, 600 + ind),
-				math.random(-300 - ind, 300 + ind)
-			)
-			task.wait(0.1)
-		end
-
-		bodyVelocity:Destroy()
-		HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero
-		HumanoidRootPart.CFrame = last_position
 	end)
 
 	core.main_connections.walkst = core.main.triggers.walkspeed.MouseButton1Click:Connect(function()
-		local test_ongoing = true
-		local last_position = HumanoidRootPart.CFrame
-		local last_speed = Humanoid.WalkSpeed
-
+        core.tests.walkspeed = true
 		task.delay(4, function() 
-			test_ongoing = false
+            core.tests.walkspeed = false
 		end)
-
-		local index = 1
-		while test_ongoing do
-			index += 1
-			local new_speed = math.random(100, 300) + (index * 5)
-			Humanoid.WalkSpeed = new_speed
-			task.wait(0.1)
-		end
-
-		Humanoid.WalkSpeed = last_speed
-		HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero
-		HumanoidRootPart.CFrame = last_position
 	end)
 
 	-- -- --
@@ -415,13 +429,20 @@ function main()
 	end)
 	
 	core.main_connections.clear = core.main.clear.MouseButton1Click:Connect(function()
-		clear()
+        if getgenv().UEMS_DEBUGGER_CLEANUP then 
+            getgenv().UEMS_DEBUGGER_CLEANUP()
+        end
 	end)
 	SERVICES.STARTERGUI:SetCore("SendNotification", {
 			Title = "Debugger",
 			Text = "Loaded Succesfully!",
 			Duration = 1.5
 		})
+
+    core.main_connections.run = SERVICES.RUN.RenderStepped:Connect(function() 
+        core.update()
+    end)
+
 	setup_remote_hooks()
     	
 end

@@ -114,7 +114,7 @@ local function main()
 	for _, object in CUSTOM_DEBUGGING do 
 		core.add_debugging_button(object.name, object.func)
 	end
-	main_connections.close = core.CLOSE.MouseButton1Click:Connect(function() 
+	core.main_connections.close = core.CLOSE.MouseButton1Click:Connect(function() 
 		if getgenv().UEMS_MAIN_CLEANUP then 
 			getgenv().UEMS_MAIN_CLEANUP()
 		end

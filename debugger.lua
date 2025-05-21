@@ -1,4 +1,4 @@
-local asset = game:GetObjects("rbxassetid://89745408973860")[1]
+local asset = game:GetObjects("rbxassetid://107332755935455")[1]
 local datamodel,GUI = pcall(function() 
     return asset:IsA("ScreenGui") and asset
 end)
@@ -21,9 +21,14 @@ local SERVICES = {
 }
 
 local LocalPlayer = SERVICES.PLAYERS.LocalPlayer
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
-local Humanoid = Character:WaitForChild("Humanoid")
+local Character = nil
+local HumanoidRootPart = nil
+local Humanoid = nil
+task.spawn(function() 
+	Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+	HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+	Humanoid = Character:WaitForChild("Humanoid")
+end)
 
 LocalPlayer.CharacterAdded:Connect(function(c)
 	Character = c
@@ -36,6 +41,8 @@ local __info = GUI:WaitForChild("INFO")
 local __output = GUI:WaitForChild("OUTPUT")
 
 local __anticheattriggercontainer = __main:WaitForChild("AnticheatTriggerContainer"):WaitForChild("Container")
+
+
 
 local core = {
 	available_index = 0;
@@ -68,9 +75,9 @@ local core = {
 		clear = __main:WaitForChild("Clear"),
 	},
 	templates = {
-		FUNCTION = __output:WaitForChild("ScrollingFrame"):WaitForChild("FunctionTemplate"),
-		REMOTE = __output:WaitForChild("ScrollingFrame"):WaitForChild("RemoteTemplate"),
-		KICK = __output:WaitForChild("ScrollingFrame"):WaitForChild("KickTemplate"),
+		FUNCTION = __output:WaitForChild("Body"):WaitForChild("ScrollingFrame"):WaitForChild("FunctionTemplate"),
+		REMOTE = __output:WaitForChild("Body"):WaitForChild("ScrollingFrame"):WaitForChild("RemoteTemplate"),
+		KICK = __output:WaitForChild("Body"):WaitForChild("ScrollingFrame"):WaitForChild("KickTemplate"),
 	},
     all_remote_meta = {},
 	main_connections = {},
@@ -141,10 +148,12 @@ function core.update()
         end 
         Humanoid.WalkSpeed = test_variables.old_speed * 25
 	else
-        if test_variables.old_speed then
-            Humanoid.WalkSpeed = test_variables.old_speed
-            test_variables.old_speed = nil
-        end 
+		if HumanoidRootPart then
+			if test_variables.old_speed then
+				Humanoid.WalkSpeed = test_variables.old_speed
+				test_variables.old_speed = nil
+			end 
+		end
     end
 
     if core.tests.velocity then
@@ -165,13 +174,15 @@ function core.update()
 			math.random(-300 - test_variables.velocity_index, 300 + test_variables.velocity_index)
 		)
 	else
-        local test_vel = HumanoidRootPart:FindFirstChild("_test_velocity_")
-        if test_vel then
-            test_vel:Destroy()
-            test_variables.velocity_index = 0
-            HumanoidRootPart.CFrame = test_variables.safe_velocity_position
-            test_variables.safe_velocity_position = nil
-        end 
+		if HumanoidRootPart then
+			local test_vel = HumanoidRootPart:FindFirstChild("_test_velocity_")
+			if test_vel then
+				test_vel:Destroy()
+				test_variables.velocity_index = 0
+				HumanoidRootPart.CFrame = test_variables.safe_velocity_position
+				test_variables.safe_velocity_position = nil
+			end 
+		end
     end
 
     if core.tests.teleport then
@@ -181,10 +192,12 @@ function core.update()
         test_variables.teleport_index += 1
         HumanoidRootPart.CFrame *= CFrame.new(0,0,-test_variables.teleport_index)
 	else
-        if test_variables.safe_teleport_position then
-            HumanoidRootPart.CFrame = test_variables.safe_teleport_position
-            test_variables.safe_teleport_position = nil
-        end 
+		if HumanoidRootPart then
+			if test_variables.safe_teleport_position then
+				HumanoidRootPart.CFrame = test_variables.safe_teleport_position
+				test_variables.safe_teleport_position = nil
+			end 
+		end
     end
 end
 
@@ -225,7 +238,7 @@ function core.add_hook(remote : RemoteEvent? | RemoteFunction?, remote_type : re
             core.event_hooks[remote].exclude_conn = new_event_template.Exclude.MouseButton1Click:Connect(function() 
                 core.event_hooks[remote].exclude = true
             end)
-			new_event_template.Parent = __output:WaitForChild("ScrollingFrame")
+			new_event_template.Parent = __output.Body:WaitForChild("ScrollingFrame")
 			new_event_template.Visible = true
 		end
 		return core.event_hooks[remote]
@@ -258,7 +271,7 @@ function core.add_hook(remote : RemoteEvent? | RemoteFunction?, remote_type : re
                 core.function_hooks[remote].exclude = true
             end)
 
-			new_event_template.Parent = __output:WaitForChild("ScrollingFrame")
+			new_event_template.Parent = __output.Body:WaitForChild("ScrollingFrame")
 			new_event_template.Visible = true
 		end
 		return core.function_hooks[remote]
@@ -266,7 +279,7 @@ function core.add_hook(remote : RemoteEvent? | RemoteFunction?, remote_type : re
 		local new_event_template = core.templates.KICK:Clone()
 		new_event_template:RemoveTag("template")
 		new_event_template.FullName.Text = string.format(":Kick('%s')", unpack({...}))
-		new_event_template.Parent = __output:WaitForChild("ScrollingFrame")
+		new_event_template.Parent = __output.Body:WaitForChild("ScrollingFrame")
 		new_event_template.Visible = true
 		return
 	end
@@ -293,9 +306,11 @@ function clear()
 			call = nil
 		end
 	end
-	for _, kid in __output:WaitForChild("ScrollingFrame"):GetChildren() do
-		if not kid:IsA("UIGridLayout") and not kid:HasTag("template") then
-			kid:Destroy()
+	if __output:FindFirstChild("Body") then 
+		for _, kid in __output:FindFirstChild("Body"):WaitForChild("ScrollingFrame"):GetChildren() do
+			if not kid:IsA("UIGridLayout") and not kid:HasTag("template") then
+				kid:Destroy()
+			end
 		end
 	end
 end
@@ -429,9 +444,7 @@ function main()
 	end)
 	
 	core.main_connections.clear = core.main.clear.MouseButton1Click:Connect(function()
-        if getgenv().UEMS_DEBUGGER_CLEANUP then 
-            getgenv().UEMS_DEBUGGER_CLEANUP()
-        end
+		clear()
 	end)
 	SERVICES.STARTERGUI:SetCore("SendNotification", {
 			Title = "Debugger",

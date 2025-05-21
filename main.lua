@@ -1,6 +1,6 @@
 -- IY | DARK DEX | SIMPLE SPY | HYDROXIDE
 -- BYPASSES | ANTICHEAT DEBUGGER |
-local asset = game:GetObjects("rbxassetid://107332755935455")[1]
+local asset = game:GetObjects("rbxassetid://123277689442463")[1]
 local datamodel,GUI = pcall(function() 
     return asset:IsA("ScreenGui") and asset
 end)

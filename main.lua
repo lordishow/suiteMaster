@@ -45,7 +45,7 @@ local core = {
         velocity = false,
         walkspeed = false,
         teleport = false,
-    }
+    },
 	main = {
 		block_kick = {
 			button = __main:WaitForChild("BlockKick"),

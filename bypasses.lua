@@ -11,6 +11,10 @@ end
 GUI.Parent = gethui()
 GUI.Name = crypt.generatekey(8, 12)
 
+local SERVICES = {
+	STARTERGUI = game:GetService("StarterGui")
+}
+
 local _BYPASSES_ = {
 	["Adonis"] = function()
 		loadstring(game:HttpGet('https://raw.githubusercontent.com/Pixeluted/adoniscries/refs/heads/main/Source.lua'))()
@@ -42,6 +46,12 @@ local function main()
 	core.CLOSE.MouseButton1Click:Connect(function() 
 		GUI:Destroy()
 	end)
+
+	SERVICES.STARTERGUI:SetCore("SendNotification", {
+			Title = "Bypasses",
+			Text = "Loaded Succesfully!",
+			Duration = 1.5
+		})
 end
 
 main()

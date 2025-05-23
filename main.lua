@@ -18,13 +18,13 @@ local CUSTOM_CREATION = {
 	[1] = {
 		name = "Infinite Yield",
 		func = function() 
-			loadstring(game:HttpGet("https://raw.githubusercontent.com/DarkNetworks/Infinite-Yield/refs/heads/main/dex.lua"))()
+			loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
 		end,
 	},
 	[2] = {
 		name = "Dark Dex",
 		func = function() 
-			loadstring(game:HttpGet("https://raw.githubusercontent.com/Babyhamsta/RBLX_Scripts/main/Universal/BypassedDarkDexV3.lua", true))()
+			loadstring(game:HttpGet("https://raw.githubusercontent.com/DarkNetworks/Infinite-Yield/refs/heads/main/dex.lua"))()
 		end,
 	},
 	[3] = {

@@ -30,13 +30,13 @@ local CUSTOM_CREATION = {
 	[3] = {
 		name = "Simple Spy",
 		func = function() 
-			loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/78n/SimpleSpy/main/SimpleSpyBeta.lua"))()
+			loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/78n/SimpleSpy/main/SimpleSpyBeta.lua"))u)
 		end,
 	},
 	[4] = {
 		name = "Cobalt Spy",
 		func = function() 	
-			loadstring(game:HttpGet("https://gitlab.com/upio/cobalt/-/releases/2.2.5.9/downloads/Cobalt.lua"))()
+			loadstring(game:HttpGet("https://gitlab.com/upio/cobalt/-/releases/2.2.5.9/downloads/Cobalt.luau"))()
 		end,
 	},
 	[5] = {

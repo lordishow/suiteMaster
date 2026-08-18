@@ -24,7 +24,7 @@ local CUSTOM_CREATION = {
 	[2] = {
 		name = "Dark Dex",
 		func = function() 
-			loadstring(game:HttpGet("https://raw.githubusercontent.com/DarkNetworks/Infinite-Yield/refs/heads/main/dex.lua"))()
+			loadstring(game:HttpGet("https://raw.githubusercontent.com/perfectusmim1/darkdex/refs/heads/main/darkdexp"))()
 		end,
 	},
 	[3] = {

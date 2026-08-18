@@ -34,6 +34,12 @@ local CUSTOM_CREATION = {
 		end,
 	},
 	[4] = {
+		name = "Cobalt Spy",
+		func = function() 	
+			loadstring(game:HttpGet("https://gitlab.com/upio/cobalt/-/releases/2.2.5.9/downloads/Cobalt.lua"))()
+		end,
+	},
+	[5] = {
 		name = "Hydroxide",
 		func = function() 
 			local owner = "Upbolt"

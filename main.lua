@@ -34,12 +34,7 @@ local CUSTOM_CREATION = {
 			loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/78n/SimpleSpy/main/SimpleSpyBeta.lua")))
 		end,
 	},
-	[4] = {
-		name = "Cobalt Spy",
-		func = function() 	
-			loadstring(game:HttpGet("https://gitlab.com/upio/cobalt/-/releases/2.2.5.9/downloads/Cobalt.luau"))()
-		end,
-	},
+
 	[5] = {
 		name = "Hydroxide",
 		func = function() 

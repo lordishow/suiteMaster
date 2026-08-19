@@ -31,7 +31,7 @@ local CUSTOM_CREATION = {
 	[3] = {
 		name = "Simple Spy",
 		func = function() 
-			loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/78n/SimpleSpy/main/SimpleSpyBeta.lua"))()
+			loadstring(game:HttpGet("https://raw.githubusercontent.com/78n/SimpleSpy/main/SimpleSpyBeta.lua"))()
 		end,
 	},
 	[4] = {

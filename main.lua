@@ -36,7 +36,7 @@ local CUSTOM_CREATION = {
 	[4] = {
 		name = "Cobalt Spy",
 		func = function() 	
-			loadstring(game:HttpGet("https://gitlab.com/upio/cobalt/-/releases/2.2.5.9/downloads/Cobalt.lua"))()
+			loadstring(game:HttpGet("https://gitlab.com/upio/cobalt/-/releases/2.2.5.9/downloads/Cobalt.luau"))()
 		end,
 	},
 	[5] = {
